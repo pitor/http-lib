@@ -59,11 +59,25 @@ public class HttpHelper {
 	private int mSocketTimeout     = SOCKET_TIMEOUT_DEFAULT;
 	private int mConnectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
 	
-	public static long GET(Handler h, Context context, String url) {
-		HttpHelper helper = new HttpHelper(h, context);
+	/** 
+	 * This is a shortcut static method to quickly access an url using GET method
+	 * It will use default socket and connection timeouts of 20s.
+	 * 
+	 * @param callerHandler  Handler that will receive response messages
+	 * @param context Android context in which the method is called
+	 * @param url url string to fetch
+	 * @return unique request id
+	 */
+	public static long GET(Handler callerHandler, Context context, String url) {
+		HttpHelper helper = new HttpHelper(callerHandler, context);
 		return helper.get(url);
 	}
 	
+	/**
+	 * HttpHelper constructor
+	 * @param callerHandler Handler that will receive response messages
+	 * @param context Android context in which the HttpHandler is being constructed
+	 */
 	public HttpHelper(Handler callerHandler, Context context) {
 		this.mCallerHandler = callerHandler;
 		mConnectivyManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -171,7 +185,6 @@ public class HttpHelper {
     		return currentRequestId;
     	}
 		
-
     	
 	    final ResponseHandler<String> response_handler = new ResponseHandler<String>() {
 	    	
