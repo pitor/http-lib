@@ -33,15 +33,21 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	
 	
 	public Message GET( String url, Map<String, String> params) {
-		String postData;
-		try {
-			postData = urlEncode(params);
-		} catch (UnsupportedEncodingException e) {
-			debug("Got exception from urlEncode", e);
-			return null;
+		String paramString = null;
+		if(params != null) {
+			try {
+				paramString = urlEncode(params);
+			} catch (UnsupportedEncodingException e) {
+				debug("Got exception from urlEncode", e);
+				return null;
+			}
 		}
-		debug("GET " + url + "?" + postData);
-		Message msg = mHttpHelper.get(url + "?" + postData);
+		StringBuilder sb = new StringBuilder( url );
+		if(paramString != null && paramString.length() > 0)
+			sb.append('?').append(paramString);
+		
+		debug("GET " + sb.toString());
+		Message msg = mHttpHelper.get(sb.toString());
 		return handleMessage(msg);
 	}
 
