@@ -77,9 +77,16 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	 * @param httpMessage
 	 * @return
 	 */
-	protected Message handleMessage(Message httpMessage) {
+	protected Message handleMessage( Message httpMessage ) {
         final Message m = new Message();
 
+        if(httpMessage == null) {
+        	m.what = 0;
+        	m.arg1 = STATUS_ERROR;
+        	m.arg2 = ERR_HTTP_LAYER;
+        	return m;
+        }
+        
         int status    = httpMessage.what;
         int requestId = httpMessage.arg2;
         
