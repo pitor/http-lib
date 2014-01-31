@@ -50,6 +50,25 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		Message msg = mHttpHelper.get(sb.toString());
 		return handleMessage(msg);
 	}
+	
+	public Message DELETE( String url, Map<String, String> params) {
+		String paramString = null;
+		if(params != null) {
+			try {
+				paramString = urlEncode(params);
+			} catch (UnsupportedEncodingException e) {
+				debug("Got exception from urlEncode", e);
+				return null;
+			}
+		}
+		StringBuilder sb = new StringBuilder( url );
+		if(paramString != null && paramString.length() > 0)
+			sb.append('?').append(paramString);
+		
+		debug("GET " + sb.toString());
+		Message msg = mHttpHelper.delete(sb.toString());
+		return handleMessage(msg);
+	}
 
 	public Message POST( String url, Map<String, String> params) {
 		String postData = "";
