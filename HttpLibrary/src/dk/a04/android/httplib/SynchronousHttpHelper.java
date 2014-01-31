@@ -197,13 +197,13 @@ public class SynchronousHttpHelper {
         	
             DefaultHttpClient client = new DefaultHttpClient(httpParameters);
             HttpResponse httpResponse = null;
-            if(method == RequestRecord.METHOD_GET || method == RequestRecord.METHOD_DELETE) {
-            	debug( "Using method GET");
+            if( method == RequestRecord.METHOD_GET || method == RequestRecord.METHOD_DELETE ) {
+            	debug( "Using method GET/DELETE method=" + method);
             	//HttpGet http_method = new HttpGet( url );
             	HttpRequestBase http_method = null;
             	switch( method ) {
-            	case RequestRecord.METHOD_GET: http_method = new HttpGet( url );
-            	case RequestRecord.METHOD_DELETE: http_method = new HttpDelete( url );
+            	case RequestRecord.METHOD_GET: http_method = new HttpGet( url ); debug("HttpGet"); break;
+            	case RequestRecord.METHOD_DELETE: http_method = new HttpDelete( url ); debug("HttpDelete"); break;
             	}
             	if(contentTypeHeader != null)
             		http_method.addHeader("Content-Type", contentTypeHeader);
@@ -216,13 +216,14 @@ public class SynchronousHttpHelper {
             	httpResponse = client.execute( http_method );
             	
             }
-            else if(method == RequestRecord.METHOD_POST || method == RequestRecord.METHOD_PUT) {
-            	debug( "Using method POST/PUT");
+            else 
+            if ( method == RequestRecord.METHOD_POST || method == RequestRecord.METHOD_PUT ) {
+            	debug( "Using method POST/PUT method=" + method);
             	//-HttpPost http_method = new HttpPost(url);
             	HttpEntityEnclosingRequest http_method = null;
             	switch(method) {
-            	case RequestRecord.METHOD_POST: http_method = new HttpPost( url );
-            	case RequestRecord.METHOD_PUT: http_method = new HttpPut( url );
+            	case RequestRecord.METHOD_POST: http_method = new HttpPost( url ); debug("HttpPost"); break;
+            	case RequestRecord.METHOD_PUT: http_method = new HttpPut( url ); debug("HttpPut"); break;
             	
             	}
             	if(contentTypeHeader != null)
