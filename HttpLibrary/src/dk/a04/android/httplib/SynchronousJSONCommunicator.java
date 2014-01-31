@@ -51,6 +51,40 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		return handleMessage(msg);
 	}
 
+	public Message POST( String url, Map<String, String> params) {
+		String postData = "";
+		if(params != null) {
+			try {
+				postData = urlEncode(params);
+			} catch (UnsupportedEncodingException e) {
+				debug("Got exception from urlEncode", e);
+				return null;
+			}
+		}
+	
+		String contentType = "application/x-www-form-urlencoded";		
+		debug("POST url: " + url + " data: " + postData );
+		Message msg = mHttpHelper.post( url, contentType, postData, "utf-8");
+		return handleMessage(msg);
+	}
+	
+	public Message PUT( String url, Map<String, String> params) {
+		String postData = "";
+		if(params != null) {
+			try {
+				postData = urlEncode(params);
+			} catch (UnsupportedEncodingException e) {
+				debug("Got exception from urlEncode", e);
+				return null;
+			}
+		}
+	
+		String contentType = "application/x-www-form-urlencoded";		
+		debug("POST url: " + url + " data: " + postData );
+		Message msg = mHttpHelper.put( url, contentType, postData, "utf-8");
+		return handleMessage(msg);
+	}
+	
 	/**
 	 * url encode dictionary so that it can be used with POST and GET methods
 	 * @param params: Map<String, String> of params to be encoded

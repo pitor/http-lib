@@ -4,8 +4,10 @@ import java.io.File;
 import java.util.HashMap;
 
 public class RequestRecord {
-	public static int METHOD_GET = 1;
-	public static int METHOD_POST = 2;
+	public static final int METHOD_GET    = 1;
+	public static final int METHOD_POST   = 2;
+	public static final int METHOD_PUT    = 3;
+	public static final int METHOD_DELETE = 4;
 	
 	public int requestId                   = -1;
 	public int method                      =  0;

@@ -11,13 +11,17 @@ import java.util.Set;
 
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpPut;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
@@ -25,6 +29,7 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
+
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -131,6 +136,15 @@ public class SynchronousHttpHelper {
 		return doRequest(RequestRecord.METHOD_POST, url, null, postData, contentType, null, headers);
 	}
 	
+	public Message put(final String url, final String contentType, final String postData, String charset) {
+		return doRequest(RequestRecord.METHOD_PUT, url, charset, postData, contentType, null, null);
+	}
+	
+	public Message delete(final String url) {
+		return doRequest(RequestRecord.METHOD_DELETE, url, null, null, null, null, null);
+	}
+	
+	
 	/** internal method that does the actual request
 	 * 
 	 * @param method  integer value. Use POST or GET static fields.
@@ -183,9 +197,14 @@ public class SynchronousHttpHelper {
         	
             DefaultHttpClient client = new DefaultHttpClient(httpParameters);
             HttpResponse httpResponse = null;
-            if(method == RequestRecord.METHOD_GET) {
+            if(method == RequestRecord.METHOD_GET || method == RequestRecord.METHOD_DELETE) {
             	debug( "Using method GET");
-            	HttpGet http_method = new HttpGet( url );
+            	//HttpGet http_method = new HttpGet( url );
+            	HttpRequestBase http_method = null;
+            	switch( method ) {
+            	case RequestRecord.METHOD_GET: http_method = new HttpGet( url );
+            	case RequestRecord.METHOD_DELETE: http_method = new HttpDelete( url );
+            	}
             	if(contentTypeHeader != null)
             		http_method.addHeader("Content-Type", contentTypeHeader);
             	if(headers != null) {
@@ -197,9 +216,15 @@ public class SynchronousHttpHelper {
             	httpResponse = client.execute( http_method );
             	
             }
-            else if(method == RequestRecord.METHOD_POST) {
-            	debug( "Using method POST");
-            	HttpPost http_method = new HttpPost(url);
+            else if(method == RequestRecord.METHOD_POST || method == RequestRecord.METHOD_PUT) {
+            	debug( "Using method POST/PUT");
+            	//-HttpPost http_method = new HttpPost(url);
+            	HttpEntityEnclosingRequest http_method = null;
+            	switch(method) {
+            	case RequestRecord.METHOD_POST: http_method = new HttpPost( url );
+            	case RequestRecord.METHOD_PUT: http_method = new HttpPut( url );
+            	
+            	}
             	if(contentTypeHeader != null)
             		http_method.addHeader("Content-Type", contentTypeHeader);
             	if(postData != null)
@@ -216,7 +241,7 @@ public class SynchronousHttpHelper {
             		}
             		debug( "Done with headers");
             	}
-            	httpResponse = client.execute( http_method );
+            	httpResponse = client.execute( (HttpRequestBase)http_method );
 
             }
             else
