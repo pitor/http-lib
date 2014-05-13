@@ -19,7 +19,7 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	private SynchronousHttpHelper mHttpHelper = null;
 	private String mCharset = "utf-8";
 	
-	public static final int STATUS_OK = 1, STATUS_ERROR = 2;
+	public static final int STATUS_OK = 1, STATUS_ERROR = 2, STATUS_OK2 = 3;
 	public static final int ERR_JSON_PARSER = 1000, ERR_HTTP_LAYER = 2000, ERR_NO_NETWORK = 3000;
 	
 	
@@ -27,10 +27,14 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		if(charset != null)
 			mCharset = charset;
 		
-		mHttpHelper = new SynchronousHttpHelper( context);
+		mHttpHelper = new SynchronousHttpHelper( context );
+		
 	}
 	
 	
+	public Message GET( String url) {
+		return GET(url, null);
+	}
 	
 	public Message GET( String url, Map<String, String> params) {
 		String paramString = null;
@@ -75,6 +79,7 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		if(params != null) {
 			try {
 				postData = urlEncode(params);
+				debug("postData:" + postData);
 			} catch (UnsupportedEncodingException e) {
 				debug("Got exception from urlEncode", e);
 				return null;
@@ -146,20 +151,8 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
         m.what = requestId;
         debug( "requestId=" + requestId + " status=" + status);
         if(status == HttpHelper.MSG_RESPONSE_OK) {
-        	String jsonString = (String)httpMessage.obj;
-        	if(jsonString == null)
-        		jsonString = "";
-        	debug( "Received JSON String " + jsonString);
-        	try {
-				JSONObject jsonObject = new JSONObject(jsonString);
-            	m.arg1 = STATUS_OK;
-            	m.arg2 = 0;
-            	m.obj  = jsonObject;
-			} catch (JSONException e) {
-				m.arg1 = STATUS_ERROR;
-            	m.arg2 = ERR_JSON_PARSER;
-            	m.obj  = null;
-			}
+        	m.arg1 = STATUS_OK;
+        	m.arg2 = 0;
         }
         else {
         	m.arg1 = STATUS_ERROR;
@@ -169,6 +162,19 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
         		m.arg2 = ERR_HTTP_LAYER;
         	m.obj  = null;
         }
+        
+        String jsonString = (String)httpMessage.obj;
+    	if(jsonString == null)
+    		jsonString = "";
+        try {
+			JSONObject jsonObject = new JSONObject(jsonString);
+        	m.obj  = jsonObject;
+		} catch (JSONException e) {
+			m.arg1 = STATUS_ERROR;
+        	m.arg2 = ERR_JSON_PARSER;
+        	m.obj  = null;
+		}
+        
         return m;
 	}
 	

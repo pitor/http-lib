@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
@@ -43,11 +44,11 @@ public class SynchronousHttpHelper {
 	
 	private static final String LOGTAG   = "HTTPLIB.SYNCHTTPHELPER";
 	
-	public static final int MSG_RESPONSE_OK           = 1001;
-	public static final int MSG_RESPONSE_HTTP_ERROR   = 1002;
-	public static final int MSG_NO_NETWORK_CONNECTION = 1003;
-	public static final int MSG_NETWORK_TIMEOUT       = 1004;
-
+	public static final int MSG_RESPONSE_OK                 = 1001;
+	public static final int MSG_RESPONSE_HTTP_LAYER_ERROR   = 1002;
+	public static final int MSG_NO_NETWORK_CONNECTION       = 1003;
+	public static final int MSG_NETWORK_TIMEOUT             = 1004;
+	
 	
 	public static final int SOCKET_TIMEOUT_DEFAULT     = 20000;
 	public static final int CONNECTION_TIMEOUT_DEFAULT = 20000;
@@ -60,6 +61,8 @@ public class SynchronousHttpHelper {
 	private int mSocketTimeout     = SOCKET_TIMEOUT_DEFAULT;
 	private int mConnectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
 	
+	private BasicCookieStore mCookieStore = null;
+	
 	public static long GET(Handler h, Context context, String url) {
 		HttpHelper helper = new HttpHelper(h, context);
 		return helper.get(url);
@@ -68,6 +71,7 @@ public class SynchronousHttpHelper {
 	public SynchronousHttpHelper(Context context) {
 		mConnectivyManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
 	}
+	
 	
 	/** Set the socket timeout for the http request.
 	 * 
@@ -181,7 +185,6 @@ public class SynchronousHttpHelper {
     	}
 
         try {
-        	debug("HttpThread run charset=" + charset);
         	
         	HttpParams httpParameters = new BasicHttpParams();
         	HttpConnectionParams.setConnectionTimeout(httpParameters, mConnectionTimeout);
@@ -193,9 +196,14 @@ public class SynchronousHttpHelper {
         	if(contentType != null)
         		contentTypeHeader = contentType + "; charset=" + usedCharset;
         				
-
-        	
+      	
             DefaultHttpClient client = new DefaultHttpClient(httpParameters);
+            
+            if(mCookieStore == null)
+                 mCookieStore = new BasicCookieStore();
+            client.setCookieStore(mCookieStore);
+            
+            
             HttpResponse httpResponse = null;
             if( method == RequestRecord.METHOD_GET || method == RequestRecord.METHOD_DELETE ) {
             	debug( "Using method GET/DELETE method=" + method);
@@ -214,7 +222,6 @@ public class SynchronousHttpHelper {
             		}
             	}
             	httpResponse = client.execute( http_method );
-            	
             }
             else 
             if ( method == RequestRecord.METHOD_POST || method == RequestRecord.METHOD_PUT ) {
@@ -251,7 +258,7 @@ public class SynchronousHttpHelper {
         } catch (ClientProtocolException e) {
         	debug( "HttpRequest Failed with exception", e);
         	Message m = new Message();
-        	m.what = MSG_RESPONSE_HTTP_ERROR;
+        	m.what = MSG_RESPONSE_HTTP_LAYER_ERROR;
         	return m;
         } catch(ConnectTimeoutException e) { 
         	debug( "HttpRequest Failed with connecttimeoutexception" + e, e);
@@ -265,12 +272,12 @@ public class SynchronousHttpHelper {
         } catch (IOException e) {
         	debug( "HttpRequest Failed with exception " + e, e);
         	Message m = new Message();
-        	m.what = MSG_RESPONSE_HTTP_ERROR;
+        	m.what = MSG_RESPONSE_HTTP_LAYER_ERROR;
         	return m;
         }  catch(Exception e) {
         	debug( "HttpRequest Failed with exception " + e , e);
         	Message m = new Message();
-        	m.what = MSG_RESPONSE_HTTP_ERROR;
+        	m.what = MSG_RESPONSE_HTTP_LAYER_ERROR;
         	return m;
         }
 		return null;
@@ -292,13 +299,16 @@ public class SynchronousHttpHelper {
 		try {
 			int statuscode = status.getStatusCode();
 			debug( "Http status code=" + statuscode);
-			what = statuscode == HttpStatus.SC_OK ? MSG_RESPONSE_OK : MSG_RESPONSE_HTTP_ERROR;
+			what = (statuscode == HttpStatus.SC_OK ||
+					statuscode == HttpStatus.SC_CREATED ||
+					statuscode == HttpStatus.SC_ACCEPTED )
+					          ? MSG_RESPONSE_OK : MSG_RESPONSE_HTTP_LAYER_ERROR;
 			http_response_code = statuscode;
 			result = inputStreamToString( entity.getContent(), usedCharset );
 			debug( "Result string:" + result);
 		} catch (IOException e) {
 			debug("Got http exception", e);
-			what = MSG_RESPONSE_HTTP_ERROR;
+			what = MSG_RESPONSE_HTTP_LAYER_ERROR;
 			http_response_code = status.getStatusCode();
 		}
 		
