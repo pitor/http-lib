@@ -116,6 +116,11 @@ public class RestHttpHelper {
 		return mConnectionTimeout;
 	}
 	
+	public void clearCookies() {
+		if(mCookieStore != null)
+			mCookieStore.clear();
+	}
+	
 	
 	public Bundle get(final String url, String charset) {
 		return doRequest(METHOD_GET, url, charset, null, null, null, null);

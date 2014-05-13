@@ -109,6 +109,10 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		return handleBundle(b);
 	}
 	
+	public void clearCookies() {
+		mHttpHelper.clearCookies();
+	}
+	
 	/**
 	 * url encode dictionary so that it can be used with POST and GET methods
 	 * @param params: Map<String, String> of params to be encoded
