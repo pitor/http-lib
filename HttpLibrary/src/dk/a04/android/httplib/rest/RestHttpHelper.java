@@ -17,6 +17,8 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
 import org.apache.http.NameValuePair;
 import org.apache.http.StatusLine;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.NTCredentials;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -29,10 +31,12 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.BasicHttpParams;
+import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
 import dk.a04.android.httplib.Config;
+import dk.a04.android.httplib.ntlm.NTLMSchemeFactory;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -68,9 +72,26 @@ public class RestHttpHelper {
 	private int mConnectionTimeout = CONNECTION_TIMEOUT_DEFAULT;
 	
 	private BasicCookieStore mCookieStore = null;
+	private boolean useNTLM = false;
+	private String ntlmUserName  = "";
+	private String ntlmPassword  = "";
+	private String ntlmDeviceIP  = "";
+	private String ntlmDomain    = "";
 	
 	public RestHttpHelper(Context context) {
 		mConnectivyManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+	}
+	
+	public static RestHttpHelper helperWithNTLM( Context context, String username, String password, String deviceIP, String domain ) {
+		RestHttpHelper helper = new RestHttpHelper(context);
+		helper.useNTLM = true;
+		
+		helper.ntlmUserName = username;
+		helper.ntlmPassword = password;
+		helper.ntlmDeviceIP = deviceIP;
+		helper.ntlmDomain   = domain;
+		
+		return helper;
 	}
 	
 	
@@ -200,7 +221,10 @@ public class RestHttpHelper {
         		contentTypeHeader = contentType + "; charset=" + usedCharset;
         				
       	
-            DefaultHttpClient client = new DefaultHttpClient(httpParameters);
+            DefaultHttpClient client = new DefaultHttpClient( httpParameters );
+            
+            if(useNTLM)
+            	addNTLMToClient( client );
             
             if(mCookieStore == null)
                  mCookieStore = new BasicCookieStore();
@@ -216,6 +240,7 @@ public class RestHttpHelper {
             	case METHOD_GET: http_method = new HttpGet( url ); debug("HttpGet"); break;
             	case METHOD_DELETE: http_method = new HttpDelete( url ); debug("HttpDelete"); break;
             	}
+            	http_method.getParams().setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE, true);
             	if(contentTypeHeader != null)
             		http_method.addHeader("Content-Type", contentTypeHeader);
             	if(headers != null) {
@@ -224,6 +249,7 @@ public class RestHttpHelper {
             			http_method.addHeader( key, headers.get(key));
             		}
             	}
+            	
             	httpResponse = client.execute( http_method );
             }
             else 
@@ -275,6 +301,19 @@ public class RestHttpHelper {
         	return httpLayerError();
         }
     }
+	
+	private void addNTLMToClient( DefaultHttpClient client) {
+		
+		if(!useNTLM)
+			return;
+		
+		Log.d(LOGTAG, "Adding ntlm to client");
+		
+		client.getAuthSchemes().register("ntlm", new NTLMSchemeFactory());
+		final NTCredentials creds = new NTCredentials( ntlmUserName, ntlmPassword, ntlmDeviceIP, ntlmDomain );
+		final AuthScope scope = new AuthScope(null, -1);
+		client.getCredentialsProvider().setCredentials( scope , creds );
+	}
 
 	private Bundle noNetworkConnection() {
 		Bundle b = new Bundle();

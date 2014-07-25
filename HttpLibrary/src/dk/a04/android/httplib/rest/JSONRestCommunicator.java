@@ -31,6 +31,14 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		mHttpHelper = new RestHttpHelper( context );
 		
 	}
+	
+	public JSONRestCommunicator( Context context, String charset, String ntlmUserName, String ntlmPassword, String ntlmDeviceIP, String ntlmDomain) {
+		if(charset != null)
+			mCharset = charset;
+		
+		mHttpHelper = RestHttpHelper.helperWithNTLM(context, ntlmUserName, ntlmPassword, ntlmDeviceIP, ntlmDomain);
+		
+	}
 		
 	public RestResponse GET( String url) {
 		return GET(url, null);
@@ -91,6 +99,16 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
 		return handleBundle(b);
 	}
+	
+	public RestResponse POST( String url, JSONObject json) {
+		String postData = json.toString();
+		String contentType = "application/json; charset=utf-8";		
+		debug("POST url: " + url + " data: " + postData );
+		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
+		return handleBundle(b);
+	}
+	
+	public int NAKKE() {return -1034;}
 	
 	public RestResponse PUT( String url, Map<String, String> params) {
 		String postData = "";
