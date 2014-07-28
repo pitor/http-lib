@@ -1,5 +1,6 @@
 package dk.a04.android.httplib.rest;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -21,6 +22,11 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	private RestHttpHelper mHttpHelper = null;
 	private String mCharset = "utf-8";
 	
+	private Map<String, String> headers = null;
+	
+	private boolean sendAsFormData = false;
+	private boolean sendAsJson     = false;
+	
 	public static final int ERR_JSON_PARSER = 1000, ERR_HTTP_LAYER = 2000, ERR_NO_NETWORK = 3000;
 	
 	
@@ -37,9 +43,29 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 			mCharset = charset;
 		
 		mHttpHelper = RestHttpHelper.helperWithNTLM(context, ntlmUserName, ntlmPassword, ntlmDeviceIP, ntlmDomain);
-		
+	}
+	
+	public void sendAsFormData() {
+		sendAsJson     = false;
+		sendAsFormData = true;
+	}
+	
+	public void sendAsJSON() {
+		sendAsJson     = true;
+		sendAsFormData = false;
+				
 	}
 		
+	
+	public void useHeader(String key, String value) {
+		if(headers == null)
+			headers = new HashMap<String, String>(5);
+		if(headers.containsKey(key))
+			headers.remove(key);
+		headers.put(key, value);
+	}
+	
+	
 	public RestResponse GET( String url) {
 		return GET(url, null);
 	}
@@ -58,13 +84,15 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		if(paramString != null && paramString.length() > 0)
 			sb.append('?').append(paramString);
 		
-		debug("GET " + sb.toString());
-		Bundle b = mHttpHelper.get(sb.toString());
+		debug( "GET " + sb.toString() );
+		Bundle b = mHttpHelper.get( sb.toString() );
 		return handleBundle(b);
 	}
+
 	
 	public RestResponse DELETE( String url, Map<String, String> params) {
 		String paramString = null;
+		
 		if(params != null) {
 			try {
 				paramString = urlEncode(params);
@@ -81,9 +109,12 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		Bundle b = mHttpHelper.delete(sb.toString());
 		return handleBundle(b);
 	}
+	
 
 	public RestResponse POST( String url, Map<String, String> params) {
-		String postData = "";
+		String postData    = null;
+		String contentType = null;
+		
 		if(params != null) {
 			try {
 				postData = urlEncode(params);
@@ -93,22 +124,23 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 				return null;
 			}
 		}
-	
-		String contentType = "application/x-www-form-urlencoded";		
+		contentType = "application/x-www-form-urlencoded";
+		
 		debug("POST url: " + url + " data: " + postData );
 		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
 		return handleBundle(b);
 	}
+	
 	
 	public RestResponse POST( String url, JSONObject json) {
-		String postData = json.toString();
-		String contentType = "application/json; charset=utf-8";		
+		String postData = json != null ? 
+				json.toString() : "{}";
+		String contentType = "application/json; charset=utf-8";
 		debug("POST url: " + url + " data: " + postData );
 		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
 		return handleBundle(b);
 	}
 	
-	public int NAKKE() {return -1034;}
 	
 	public RestResponse PUT( String url, Map<String, String> params) {
 		String postData = "";
@@ -122,7 +154,15 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		}
 	
 		String contentType = "application/x-www-form-urlencoded";		
-		debug("POST url: " + url + " data: " + postData );
+		debug("PUT url: " + url + " data: " + postData );
+		Bundle b = mHttpHelper.put( url, contentType, postData, "utf-8");
+		return handleBundle(b);
+	}
+	
+	public RestResponse PUT( String url, JSONObject json) {
+		String postData = json.toString();
+		String contentType = "application/json; charset=utf-8";		
+		debug("PUT url: " + url + " data: " + postData );
 		Bundle b = mHttpHelper.put( url, contentType, postData, "utf-8");
 		return handleBundle(b);
 	}

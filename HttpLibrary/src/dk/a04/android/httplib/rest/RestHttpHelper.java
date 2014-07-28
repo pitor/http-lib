@@ -7,6 +7,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.http.Header;
@@ -48,7 +49,7 @@ public class RestHttpHelper {
 	
 	private ConnectivityManager mConnectivyManager;
 	
-	private static final String LOGTAG   = "HTTPLIB.SYNCHTTPHELPER";
+	private static final String LOGTAG   = "HTTPLIB.RESTHTTPHELPER";
 	
 	public static final int WHAT_RESPONSE_OK                 = 1001;
 	public static final int WHAT_HTTP_LAYER_ERROR            = 1002;
@@ -63,7 +64,7 @@ public class RestHttpHelper {
 	public static final int SOCKET_TIMEOUT_DEFAULT     = 20000;
 	public static final int CONNECTION_TIMEOUT_DEFAULT = 20000;
 	
-	public static final String DEFAULT_REQUEST_CHARSET="utf-8";
+	public static final String DEFAULT_REQUEST_CHARSET = "utf-8";
 	
 	
 	private static int curRequestId = 1;
@@ -151,6 +152,12 @@ public class RestHttpHelper {
 		return doRequest(METHOD_GET, url, null, null, null, null, null);
 	}
 	
+	public Bundle get(final String url, Map<String, String> headers ) {
+		return doRequest(METHOD_GET, url, null, null, null, null, headers );
+	}
+	
+	
+	
 	public Bundle post(final String url, final String postData) {
 		return doRequest(METHOD_POST, url, null, postData, null, null, null);
 	}
@@ -171,8 +178,16 @@ public class RestHttpHelper {
 		return doRequest(METHOD_PUT, url, charset, postData, contentType, null, null);
 	}
 	
+	public Bundle put(final String url, final String contentType, final String postData, final HashMap<String, String> headers) {
+		return doRequest(METHOD_PUT, url, null, postData, contentType, null, headers);
+	}
+	
 	public Bundle delete(final String url) {
 		return doRequest(METHOD_DELETE, url, null, null, null, null, null);
+	}
+	
+	public Bundle delete(final String url, Map<String, String> headers) {
+		return doRequest(METHOD_DELETE, url, null, null, null, null, headers);
 	}
 	
 	
@@ -184,7 +199,7 @@ public class RestHttpHelper {
 	 * @param postData
 	 * @param contentType
 	 * @param file
-	 * @param headers
+	 * @param headers Additional Headers
 	 * @return unique request id that will be used to identify the response
 	 */
 	private Bundle doRequest( final int method, 
@@ -193,7 +208,7 @@ public class RestHttpHelper {
 						   final String postData, 
 						   final String contentType, 
 						   final File file,
-						   final HashMap<String, String> headers) {
+						   final Map<String, String> headers) {
 			debug( "Calling doRequest. method=" + method );
 		
 		NetworkInfo netinfo = mConnectivyManager.getActiveNetworkInfo();
@@ -202,7 +217,6 @@ public class RestHttpHelper {
     	else
     		debug( "obtained netinfo");
     	
-    	final int currentRequestId = obtainRequestId();
     	if(netinfo == null || !netinfo.isConnected()) {
     		debug( "No network connection... sending message" );
     		return noNetworkConnection();
@@ -240,7 +254,8 @@ public class RestHttpHelper {
             	case METHOD_GET: http_method = new HttpGet( url ); debug("HttpGet"); break;
             	case METHOD_DELETE: http_method = new HttpDelete( url ); debug("HttpDelete"); break;
             	}
-            	http_method.getParams().setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE, true);
+            	if(useNTLM)
+            		http_method.getParams().setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE, true);
             	if(contentTypeHeader != null)
             		http_method.addHeader("Content-Type", contentTypeHeader);
             	if(headers != null) {
@@ -255,48 +270,58 @@ public class RestHttpHelper {
             else 
             if ( method == METHOD_POST || method == METHOD_PUT ) {
             	debug( "Using method POST/PUT method=" + method);
-            	//-HttpPost http_method = new HttpPost(url);
+
             	HttpEntityEnclosingRequest http_method = null;
             	switch(method) {
             	case METHOD_POST: http_method = new HttpPost( url ); debug("HttpPost"); break;
             	case METHOD_PUT: http_method = new HttpPut( url ); debug("HttpPut"); break;
-            	
             	}
+            	
+            	//if(useNTLM)
+            	//	http_method.getParams().setBooleanParameter(CoreProtocolPNames.USE_EXPECT_CONTINUE, true);
+            	
             	if(contentTypeHeader != null)
             		http_method.addHeader("Content-Type", contentTypeHeader);
+            	
             	if(postData != null)
             		http_method.setEntity(new StringEntity(postData, usedCharset));
 
             	else if(file != null) {
             		http_method.setEntity(new FileEntity(file, contentType));
             	}
+            	
+            	//Add headers to request if headers are present
             	if(headers != null) {
-            		debug( "Adding headers");
             		for(String key : headers.keySet()) {
             			debug("Adding header: " + key + ":" + headers.get(key));
             			http_method.addHeader( key, headers.get(key));
             		}
-            		debug( "Done with headers");
             	}
             	httpResponse = client.execute( (HttpRequestBase)http_method );
 
             }
             else
             	debug("Illegal method!");
+            
             return handleResponse(charset, httpResponse);
-        } catch (ClientProtocolException e) {
+        } 
+        catch (ClientProtocolException e) {
         	debug( "HttpRequest Failed with exception", e);
         	return httpLayerError();
-        } catch(ConnectTimeoutException e) { 
+        } 
+        catch(ConnectTimeoutException e) { 
         	debug( "HttpRequest Failed with connecttimeoutexception" + e, e);
         	return networkTimeOutError();
-        } catch(SocketTimeoutException e) { 
+        } 
+        catch(SocketTimeoutException e) { 
         	debug( "HttpRequest Failed with sockettimeoutexception" + e, e);
         	return networkTimeOutError();
-        } catch (IOException e) {
+        } 
+        catch (IOException e) {
         	debug( "HttpRequest Failed with exception " + e, e);
         	return httpLayerError();
-        }  catch(Exception e) {
+        }
+        catch(Exception e) {
         	debug( "HttpRequest Failed with exception " + e , e);
         	return httpLayerError();
         }
