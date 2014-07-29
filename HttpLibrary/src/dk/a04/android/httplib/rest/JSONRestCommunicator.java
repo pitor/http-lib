@@ -195,7 +195,7 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	/**
 	 * 
 	 * @param httpMessage
-	 * @return
+	 * @return RestResponse object contain
 	 */
 	protected RestResponse handleBundle( Bundle bundle ) {
         final RestResponse rr = new RestResponse();
@@ -237,8 +237,8 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
         	}
         	rr.httpLayerStatus = RestResponse.STATUS_HTTP_LAYER_OK;
         	rr.httpCode        = httpCode;
-        	rr.contentType = contentType;
-        	rr.content = responseString;
+        	rr.contentType     = contentType;
+        	rr.content         = responseString;
         	return rr;
 		} 
         catch (JSONException e) {

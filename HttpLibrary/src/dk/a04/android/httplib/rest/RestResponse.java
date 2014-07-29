@@ -1,5 +1,6 @@
 package dk.a04.android.httplib.rest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class RestResponse {
@@ -9,7 +10,7 @@ public class RestResponse {
 	
 	
 	public int httpLayerStatus = 0;
-	public int httpCode = 0;
+	public int httpCode        = 0;
 	public String contentType = "";
 	public String content = "";
 	public JSONObject json = null;
@@ -21,6 +22,15 @@ public class RestResponse {
 		sb.append("httpCode: " + httpCode + ", ");
 		sb.append("contentType: " + contentType + ", ");
 		sb.append("content: " + content + ", ");
+		
+		if(json != null)
+			try {
+				sb.append("json:" + json.toString(2));
+			} catch (JSONException e) {
+				sb.append("json: <json error>" );
+			}
+		else
+			sb.append("json: null");
 		
 		return sb.toString();
 	}
