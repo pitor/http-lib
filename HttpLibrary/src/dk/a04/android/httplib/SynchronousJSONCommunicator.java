@@ -14,7 +14,7 @@ import java.net.URLEncoder;
 
 
 public class SynchronousJSONCommunicator {
-public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
+public static final String LOGTAG = "HTTPLIB.SYNCJSONCOMMUNICATOR";
 	
 	private SynchronousHttpHelper mHttpHelper = null;
 	private String mCharset = "utf-8";
@@ -165,11 +165,16 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
         
         String jsonString = (String)httpMessage.obj;
     	if(jsonString == null)
-    		jsonString = "";
+    		jsonString = "{}";
+    	
+    	if(jsonString.indexOf("{") >= 0 && jsonString.lastIndexOf("}") >= 0)
+    		jsonString = jsonString.substring(jsonString.indexOf("{"), jsonString.lastIndexOf("}") + 1 );
+    	
         try {
-			JSONObject jsonObject = new JSONObject(jsonString);
+			JSONObject jsonObject = new JSONObject( jsonString );
         	m.obj  = jsonObject;
 		} catch (JSONException e) {
+			debug("Got JSON exception", e);
 			m.arg1 = STATUS_ERROR;
         	m.arg2 = ERR_JSON_PARSER;
         	m.obj  = null;
