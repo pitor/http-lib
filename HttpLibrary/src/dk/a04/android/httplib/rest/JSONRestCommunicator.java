@@ -135,7 +135,7 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	public RestResponse POST( String url, JSONObject json) {
 		String postData = json != null ? 
 				json.toString() : "{}";
-		String contentType = "application/json; charset=utf-8";
+		String contentType = "application/json";
 		debug("POST url: " + url + " data: " + postData );
 		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
 		return handleBundle(b);
