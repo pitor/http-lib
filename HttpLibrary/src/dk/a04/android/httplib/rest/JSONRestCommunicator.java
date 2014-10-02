@@ -209,6 +209,8 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
         
         int what = bundle.getInt(RestHttpHelper.KEY_HTTP_WHAT_IS_IT);
         
+        rr.noNetworkFlag = (what == RestHttpHelper.WHAT_NO_NETWORK_CONNECTION);
+        
         if(what == RestHttpHelper.WHAT_NETWORK_TIMEOUT || 
            what == RestHttpHelper.WHAT_HTTP_LAYER_ERROR ||
            what == RestHttpHelper.WHAT_NO_NETWORK_CONNECTION) {

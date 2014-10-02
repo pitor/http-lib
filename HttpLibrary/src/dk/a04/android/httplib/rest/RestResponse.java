@@ -11,6 +11,7 @@ public class RestResponse {
 	
 	public int httpLayerStatus = 0;
 	public int httpCode        = 0;
+	public boolean noNetworkFlag = false;
 	public String contentType = "";
 	public String content = "";
 	public JSONObject json = null;
