@@ -290,12 +290,12 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	
 	private static void debug(String message) {
 		if(Config.DEBUG)
-			Log.d(LOGTAG, message);
+			Log.i(LOGTAG, message);
 	}
 	
 	private static void debug(String message, Throwable tr) {
 		if(Config.DEBUG)
-			Log.d(LOGTAG, message, tr);
+			Log.i(LOGTAG, message, tr);
 	}
 	
 }

@@ -332,7 +332,7 @@ public class RestHttpHelper {
 		if(!useNTLM)
 			return;
 		
-		Log.d(LOGTAG, "Adding ntlm to client");
+		debug("Adding ntlm to client");
 		
 		client.getAuthSchemes().register("ntlm", new NTLMSchemeFactory());
 		final NTCredentials creds = new NTCredentials( ntlmUserName, ntlmPassword, ntlmDeviceIP, ntlmDomain );
@@ -449,12 +449,12 @@ public class RestHttpHelper {
 
 	private static void debug(String message) {
 		if(Config.DEBUG)
-			Log.d(LOGTAG, message);
+			Log.i(LOGTAG, message);
 	}
 	
 	private static void debug(String message, Throwable tr) {
 		if(Config.DEBUG)
-			Log.d(LOGTAG, message, tr);
+			Log.i(LOGTAG, message, tr);
 	}
 }
 
