@@ -1,7 +1,6 @@
 package dk.a04.android.httplib;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +9,6 @@ import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Set;
 
-import org.apache.http.Header;
 import org.apache.http.HeaderElement;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -309,7 +307,6 @@ public class HttpHelper {
 	public static String inputStreamToString(final InputStream stream, String charset) throws IOException {
 		if(charset == null)
 			charset = "UTF-8";
-		InputStreamReader isr = new InputStreamReader(stream);
         BufferedReader br = new BufferedReader(new InputStreamReader(stream, charset), 10000);
         StringBuilder sb = new StringBuilder();
         String line = null;

@@ -1,9 +1,12 @@
 package dk.a04.android.httplib;
 
 import java.io.Serializable;
-import java.util.Date;
 
 public abstract class FetchedObject extends Object implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7462919606034565283L;
 	public static final int STATUS_OK = 1001;
 	public static final int STATUS_ERROR = 1002;
 	public static final int STATUS_UNKNOWN = 1003;

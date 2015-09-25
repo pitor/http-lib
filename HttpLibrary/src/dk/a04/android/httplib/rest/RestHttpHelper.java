@@ -144,6 +144,14 @@ public class RestHttpHelper {
 	}
 	
 	
+	public BasicCookieStore getCookieStore() {
+		return mCookieStore;
+	}
+	
+	public void setCookieStore(BasicCookieStore cookieStore) {
+		this.mCookieStore = cookieStore;
+	}
+	
 	public Bundle get(final String url, String charset) {
 		return doRequest(METHOD_GET, url, charset, null, null, null, null);
 	}

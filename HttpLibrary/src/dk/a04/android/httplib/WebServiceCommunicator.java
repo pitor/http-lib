@@ -134,6 +134,7 @@ public class WebServiceCommunicator {
 			Log.d(LOGTAG, message);
 	}
 	
+	@SuppressWarnings("unused")
 	private static void debug(String message, Throwable tr) {
 		if(Config.DEBUG)
 			Log.d(LOGTAG, message, tr);

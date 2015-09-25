@@ -1,5 +1,6 @@
 package dk.a04.android.httplib.rest;
 
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,11 +13,12 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 
 
-public class JSONRestCommunicator {
+public class RawFileCommunicator {
 public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	
 	private RestHttpHelper mHttpHelper = null;
@@ -24,13 +26,11 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	
 	private Map<String, String> headers = null;
 	
-	private boolean sendAsFormData = false;
-	private boolean sendAsJson     = false;
-	
 	public static final int ERR_JSON_PARSER = 1000, ERR_HTTP_LAYER = 2000, ERR_NO_NETWORK = 3000;
 	
+	private enum METHOD { GET, POST, PUT, DELETE };
 	
-	public JSONRestCommunicator( Context context, String charset) {
+	public RawFileCommunicator( Context context, String charset) {
 		if(charset != null)
 			mCharset = charset;
 		
@@ -38,22 +38,11 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		
 	}
 	
-	public JSONRestCommunicator( Context context, String charset, String ntlmUserName, String ntlmPassword, String ntlmDeviceIP, String ntlmDomain) {
+	public RawFileCommunicator( Context context, String charset, String ntlmUserName, String ntlmPassword, String ntlmDeviceIP, String ntlmDomain) {
 		if(charset != null)
 			mCharset = charset;
 		
 		mHttpHelper = RestHttpHelper.helperWithNTLM(context, ntlmUserName, ntlmPassword, ntlmDeviceIP, ntlmDomain);
-	}
-	
-	public void sendAsFormData() {
-		sendAsJson     = false;
-		sendAsFormData = true;
-	}
-	
-	public void sendAsJSON() {
-		sendAsJson     = true;
-		sendAsFormData = false;
-				
 	}
 		
 	
@@ -65,111 +54,47 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 		headers.put(key, value);
 	}
 	
-	
-	public RestResponse GET( String url) {
-		return GET(url, null);
-	}
-	
-	public RestResponse GET( String url, Map<String, String> params) {
-		String paramString = null;
-		if(params != null) {
-			try {
-				paramString = urlEncode(params);
-			} catch (UnsupportedEncodingException e) {
-				debug("Got exception from urlEncode", e);
-				return null;
-			}
-		}
-		StringBuilder sb = new StringBuilder( url );
-		if(paramString != null && paramString.length() > 0)
-			sb.append('?').append(paramString);
-		
-		debug( "GET " + sb.toString() );
-		Bundle b = mHttpHelper.get( sb.toString() );
-		return handleBundle(b);
-	}
-
-	
-	public RestResponse DELETE( String url, Map<String, String> params) {
-		String paramString = null;
-		
-		if(params != null) {
-			try {
-				paramString = urlEncode(params);
-			} catch (UnsupportedEncodingException e) {
-				debug("Got exception from urlEncode", e);
-				return null;
-			}
-		}
-		StringBuilder sb = new StringBuilder( url );
-		if(paramString != null && paramString.length() > 0)
-			sb.append('?').append(paramString);
-		
-		debug("GET " + sb.toString());
-		Bundle b = mHttpHelper.delete(sb.toString());
-		return handleBundle(b);
-	}
-	
-
-	public RestResponse POST( String url, Map<String, String> params) {
+	public RestResponse __METHOD( METHOD method, String url, Map<String, String> params, File file, String contentType) {
 		String postData    = null;
-		String contentType = null;
+
 		
 		if(params != null) {
 			try {
 				postData = urlEncode(params);
+				url = url + "?" + postData;
 				debug("postData:" + postData);
 			} catch (UnsupportedEncodingException e) {
 				debug("Got exception from urlEncode", e);
 				return null;
 			}
 		}
-		contentType = "application/x-www-form-urlencoded";
 		
-		debug("POST url: " + url + " data: " + postData );
-		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
-		return handleBundle(b);
-	}
-	
-	
-	public RestResponse POST( String url, JSONObject json) {
-		String postData = json != null ? 
-				json.toString() : "{}";
-		String contentType = "application/json";
-		debug("POST url: " + url + " data: " + postData );
-		Bundle b = mHttpHelper.post( url, contentType, postData, "utf-8");
-		return handleBundle(b);
-	}
-	
-	
-	public RestResponse PUT( String url, Map<String, String> params) {
-		String postData = "";
-		if(params != null) {
-			try {
-				postData = urlEncode(params);
-			} catch (UnsupportedEncodingException e) {
-				debug("Got exception from urlEncode", e);
-				return null;
-			}
+		Bundle b = null;
+		switch(method) {
+		case POST:
+			debug( "POST file to url: " + url );
+			b = mHttpHelper.post( url, contentType, file);
+			break;
+		default:
+			throw new InvalidParameterException("Invalid method parameter");
 		}
-	
-		String contentType = "application/x-www-form-urlencoded";		
-		debug("PUT url: " + url + " data: " + postData );
-		Bundle b = mHttpHelper.put( url, contentType, postData, "utf-8");
+
 		return handleBundle(b);
 	}
 	
-	public RestResponse PUT( String url, JSONObject json) {
-		String postData = json.toString();
-		String contentType = "application/json; charset=utf-8";		
-		debug("PUT url: " + url + " data: " + postData );
-		Bundle b = mHttpHelper.put( url, contentType, postData, "utf-8");
-		return handleBundle(b);
+	
+	public RestResponse POST( String url, Map<String, String> params, File file, String contentType) {
+		return __METHOD( METHOD.POST, url, params, file, contentType );
+	}
+	
+	public RestResponse PUT( String url, Map<String, String> params, File file, String contentType) {
+		return __METHOD( METHOD.PUT, url, params, file, contentType );
 	}
 	
 	public void clearCookies() {
 		mHttpHelper.clearCookies();
 	}
+	
 	
 	public BasicCookieStore getCookieStore() {
 		return mHttpHelper.getCookieStore();
@@ -177,7 +102,7 @@ public static final String LOGTAG = "HTTPLIB.JSONCOMMUNICATOR";
 	
 	public void setCookieStore(BasicCookieStore cookieStore) {
 		mHttpHelper.setCookieStore(cookieStore);
-	} 
+	}
 	
 	/**
 	 * url encode dictionary so that it can be used with POST and GET methods
